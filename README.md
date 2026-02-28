@@ -20,7 +20,6 @@ A simple Laravel task management app that demonstrates:
 
 ```bash
 composer install
-npm install
 ```
 
 2) Configure environment
