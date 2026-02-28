@@ -102,12 +102,12 @@
                         <th style="width: 30%;">Actions</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    @forelse($project->tasks as $task)
-                        <tr>
-                            <td class="fw-semibold">{{ $task->name }}</td>
+                    <tbody id="task-list" data-project="{{ $project->id }}">
+                    @forelse($project->tasks->sortBy('priority') as $task)
+                        <tr class="task-item" data-task-id="{{ $task->id }}">
+                            <td class="fw-semibold" ><span class="drag-handle me-2">⋮⋮</span>{{ $task->name }}</td>
                             <td>
-                                <span class="badge text-bg-secondary">{{ $task->priority }}</span>
+                                <span class="badge text-bg-secondary priority-number">{{ $task->priority }}</span>
                             </td>
                             <td>
                                 <div class="d-flex gap-2 flex-wrap">
@@ -180,6 +180,58 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
         crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>		
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js" integrity="sha512-MSOo1aY+3pXCOCdGAYoBZ6YGI0aragoQsg1mKKBHXCYPIWxamwOE7Drh+N5CPgGI5SA9IEKJiPjdfqWFWmZtRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    $(document).ready(function(){
+        
+        $('#task-list').sortable({
+            handle: '.drag-handle',
+            placeholder: 'sortable-placeholder',
+            cursor: 'move',
+            opacity: 0.7,
+
+            update: function() {
+                
+                let taskOrder = [];
+
+                $('#task-list .task-item').each(function(index) {
+
+                    let newPriority = index + 1; // New priority based on position
+
+                    taskOrder.push({
+                        id: $(this).data('task-id'),
+                        priority: newPriority
+                    });
+
+                // Update priority display immediately
+                    $(this).find('.priority-number').text(newPriority);
+                                
+                });
+                
+                // Get project ID from data attribute
+                let projectId = $('#task-list').data('project');
+
+                // Send new order to server via AJAX
+                $.ajax({
+                    url: '/projects/' + projectId + '/tasks/reorder',
+                    method: 'POST',
+                    data: {
+                        order: taskOrder,
+                        _token: '{{ csrf_token() }}'
+                }
+                }).done(function(response) {
+                    console.log('Task order updated successfully');
+                })
+                .fail(function(xhr) {
+                    console.error('Error updating task order:', xhr);
+                })
+
+            }
+            })
+    });
+        
+</script>		
 </body>
 </html>

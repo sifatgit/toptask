@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/projects/{project}/tasks', 'store')->name('tasks.store'); // Add task to project
         Route::put('/tasks/{task}', 'update')->name('tasks.update');            // Update task
+        Route::post('/projects/{project}/tasks/reorder', 'reorder')->name('tasks.reorder'); // Reorder tasks via AJAX
         Route::delete('/tasks/{task}', 'destroy')->name('tasks.destroy');       // Delete task
     });
 

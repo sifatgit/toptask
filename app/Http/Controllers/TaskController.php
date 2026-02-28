@@ -75,6 +75,30 @@ class TaskController extends Controller
     }
 
     /**
+     * Reorder tasks via AJAX (project owner only).
+     * Expects an array of task IDs in the new order.
+     */    
+
+    public function reorder(Request $request, Project $project)
+    {
+        $this->authorize('update', $project);
+        
+        $validated = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*.id' => ['required', 'exists:tasks,id' ] , 'order.*.priority' => ['required', 'integer'],
+        ]);
+
+        DB::transaction(function () use ($validated, $project) {
+            foreach ($validated['order'] as $item){
+                $task = Task::where('id', $item['id'])->where('project_id', $project->id)->firstOrFail();
+                $task->update(['priority' => $item['priority']]);
+            }
+        });
+
+        return response()->json(['message' => 'Tasks reordered successfully!']);
+    }
+
+    /**
      * Delete a task (task owner only).
      */
     public function destroy(Task $task): RedirectResponse
